@@ -35,22 +35,38 @@ app.use(async ctx => {
           return;
       case 'postTicket':
           const {name, description} = ctx.request.body;
-          const objToAdd = {
-            name: name,
-            description: description,
-            created: new Date,
-            id: Math.floor(Math.random() * 10000),
+          if (ctx.request.body.id) {
+            const existingTicket = ticketsStorage.find(item => item.id == ctx.request.body.id);
+            const updatedObj = {
+              name: name,
+              description: description,
+              created: existingTicket.created,
+              id: existingTicket.id,
+            }
+            ticketsStorage.splice(ticketsStorage.indexOf(existingTicket));
+            ticketsStorage.push(updatedObj);
+          } else {
+            const objToAdd = {
+              name: name,
+              description: description,
+              created: new Date,
+              id: Math.floor(Math.random() * 10000),
+            }
+            ticketsStorage.push(objToAdd);
           }
-          ticketsStorage.push(objToAdd);
           return;
       case 'getTicket':
-        for (const item of ticketsStorage) {
-          if (item.id == reqObj.id) {
-            ctx.response.body = item.description;
+          for (const item of ticketsStorage) {
+            if (item.id == reqObj.id) {
+              ctx.response.body = item.description;
+            }
           }
-        }
-        ctx.response.status = 200;
-        return;
+          return;
+      case 'deleteTicket':
+          const toDel = ticketsStorage.find(item => item.id == reqObj.id);
+          ticketsStorage.splice(ticketsStorage.indexOf(toDel))
+          ctx.response.status = 200;
+          return;
       default:
           ctx.response.status = 404;
           return;
